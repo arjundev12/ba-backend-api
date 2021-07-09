@@ -13,7 +13,8 @@ const Auth = require("../../middlewares/loginToken")
 
 // upload.single('profile_image')
 router.post('/add-customer', admin_controller.createCustomer)
-// router.post('/subadmin-signup',admin_controller.signup)
+router.post('/customer-list',admin_controller.getCustomerList)
+router.get('/customer-details/:_id',admin_controller.getCustomerDetails)
 router.get('/get-customer',admin_controller.getCustomer)
 router.post('/uploade-doc',upload.single('file'),admin_controller.uploadeFile)
 

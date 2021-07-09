@@ -17,8 +17,8 @@ class adminAuth {
             createCustomer: this.createCustomer.bind(this),
             getCustomer: this.getCustomer.bind(this),
             uploadeFile: this.uploadeFile.bind(this),
-            // getKycDoc: this.getKycDoc.bind(this),
-            // getUserKyc: this.getUserKyc.bind(this),
+            getCustomerList: this.getCustomerList.bind(this),
+            getCustomerDetails: this.getCustomerDetails.bind(this),
             // getTotalCount: this.getTotalCount.bind(this)
 
         }
@@ -139,7 +139,46 @@ class adminAuth {
             res.status(500).json({ success: false, message: "Internal server error", })
         }
     }
-
+    async getCustomerList(req, res) {
+        try {
+            let options = {
+                page: Number(req.body.page) || 1,
+                limit: Number(req.body.limit) || 10,
+                // sort: {  "subcategory_meta.name":1,"name": 1, },
+                lean: true,
+            }
+            let query = {}
+            console.log(req.body)
+            if (req.body.searchData ){
+                query = { $or: [{ email: { $regex: req.body.searchData, $options: "i" } },
+                 { name: { $regex: req.body.searchData, $options: "i" } },
+                 { first_name: { $regex: req.body.searchData, $options: "i" } },
+                 { display_name: { $regex: req.body.searchData, $options: "i" } },
+                 { middle_name: { $regex: req.body.searchData, $options: "i" } }] }
+            }
+            if (req.body._id ){
+                query.created_by = req.body._id
+            }
+            console.log("request",query)
+            let data = await CustomerModel.paginate(query, options)
+        //    console.log("req.query._id,",data)
+            // let getUser = await CustomerModel.find({created_by: req.query._id},{name:1,first_name:1,last_name:1,display_name:1})
+            res.json({ code: 200, success: true, message: "Get list successfully ", data: data })
+        } catch (error) {
+            console.log("Error in catch", error)
+            res.status(500).json({ success: false, message: "Internal server error", })
+        }
+    }
+    async getCustomerDetails(req, res) {
+        try {
+           console.log("req.query._id,",req.params._id)
+            let getUser = await CustomerModel.findOne({_id: req.params._id})
+            res.json({ code: 200, success: true, message: "Get data successfully ", data: getUser })
+        } catch (error) {
+            console.log("Error in catch", error)
+            res.status(500).json({ success: false, message: "Internal server error", })
+        }
+    }
     async uploadeFile(req, res) {
         try {
             if (req.file.path) {
