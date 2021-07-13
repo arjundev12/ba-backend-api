@@ -8,7 +8,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken')
 const TransactionModal = require('../../models/transactions')
 const DocumentsModel = require('../../models/userDocument')
- const CustomerModel =require('../../models/admin/customers')
+const CustomerModel = require('../../models/admin/customers')
 class adminAuth {
     constructor() {
         return {
@@ -19,7 +19,14 @@ class adminAuth {
             uploadeFile: this.uploadeFile.bind(this),
             getCustomerList: this.getCustomerList.bind(this),
             getCustomerDetails: this.getCustomerDetails.bind(this),
-            // getTotalCount: this.getTotalCount.bind(this)
+            updateUser: this.updateUser.bind(this)
+            // createCustomer: this.createCustomer.bind(this),
+            // getCustomer: this.getCustomer.bind(this),
+            // uploadeFile: this.uploadeFile.bind(this),
+            // getCustomerList: this.getCustomerList.bind(this),
+            // getCustomerDetails: this.getCustomerDetails.bind(this),
+            // updateUser: this.updateUser.bind(this)
+
 
         }
     }
@@ -28,7 +35,7 @@ class adminAuth {
         try {
             let { email, password } = req.body
             let getUser = await UsersAdminModel.findOne({ $and: [{ email: email }, { login_type: 'manual' }, { user_type: 'subadmin' }] },
-                ).lean()
+            ).lean()
             console.log("getUser", getUser)
             if (getUser) {
                 let verifypass = await bcrypt.compareSync(password, getUser.password);
@@ -55,12 +62,12 @@ class adminAuth {
         try {
             let { name, organization, password, email, location } = req.body
             let getUser = await UsersAdminModel.findOne({ $and: [{ email: email }, { login_type: 'manual' }, { user_type: 'subadmin' }] }).lean()
-            if(getUser){
+            if (getUser) {
                 res.json({ code: 404, success: false, message: 'Email is already register', })
-            }else{
+            } else {
                 const salt = bcrypt.genSaltSync(10);
                 const hash = bcrypt.hashSync(password, salt);
-                
+
                 let savedata = new UsersAdminModel({
                     name: name,
                     password: hash,
@@ -79,7 +86,7 @@ class adminAuth {
                 data.token = await jwt.sign(stoken, process.env.SUPERSECRET, { expiresIn: '1d' });
                 res.json({ code: 200, success: true, message: 'Sign up successfully', data: data })
             }
-            
+
         } catch (error) {
             console.log("Error in catch", error)
             res.status(500).json({ success: false, message: "Somthing went wrong", })
@@ -87,52 +94,154 @@ class adminAuth {
     }
     async createCustomer(req, res) {
         try {
-            let { name,title, first_name, middle_name, last_name, display_name, website, suffix, email,
+            let { name, title, first_name, middle_name, last_name, display_name, website, suffix, email,
                 company, password, number, profile_pic, gst_registration_type, gstin, is_sub_customer, bill_with_type,
-                billing_address, shipping_address, notes, tax_info, payment_and_billing, attachments,other,mobile_no,fax,created_by
-            ,customer_meta} = req.body
-            let savedata = new CustomerModel({
-                title: title,
-                name: name,
-                first_name: first_name,
-                middle_name: middle_name,
-                last_name: last_name,
-                display_name: display_name,
-                website: website,
-                suffix: suffix,
-                email: email,
-                other: other,
-                mobile_no: mobile_no,
-                fax: fax,
-                company: company,
-                // password: password,
-                number: number,
-                // profile_pic: profile_pic,
-                gst_registration_type: gst_registration_type,
-                gstin: gstin,
-                is_sub_customer: is_sub_customer,
-                bill_with_type: bill_with_type,
-                billing_address: billing_address,
-                shipping_address: shipping_address,
-                notes: notes,
-                tax_info: tax_info,
-                payment_and_billing: payment_and_billing,
-                attachments: attachments,
-                created_by: created_by,
-                customer_meta: customer_meta
-            })
-            let data = await savedata.save();
-            res.json({ code: 200, success: true, message: 'Create customer successfully', data: data })
+                billing_address, shipping_address, notes, tax_info, payment_and_billing, attachments, other, mobile_no, fax, created_by
+                , customer_meta } = req.body
+            let getuser = await CustomerModel.findOne({ email: email })
+            if (getuser) {
+                res.json({ code: 200, success: true, message: 'email is already exist', data: getuser })
+            } else {
+                let savedata = new CustomerModel({
+                    title: title,
+                    name: name,
+                    first_name: first_name,
+                    middle_name: middle_name,
+                    last_name: last_name,
+                    display_name: display_name,
+                    website: website,
+                    suffix: suffix,
+                    email: email,
+                    other: other,
+                    mobile_no: mobile_no,
+                    fax: fax,
+                    company: company,
+                    // password: password,
+                    number: number,
+                    // profile_pic: profile_pic,
+                    gst_registration_type: gst_registration_type,
+                    gstin: gstin,
+                    is_sub_customer: is_sub_customer,
+                    bill_with_type: bill_with_type,
+                    billing_address: billing_address,
+                    shipping_address: shipping_address,
+                    notes: notes,
+                    tax_info: tax_info,
+                    payment_and_billing: payment_and_billing,
+                    attachments: attachments,
+                    created_by: created_by,
+                    customer_meta: customer_meta
+                })
+                let data = await savedata.save();
+                res.json({ code: 200, success: true, message: 'Create customer successfully', data: data })
+            }
+
         } catch (error) {
             console.log("Error in catch", error)
             res.status(500).json({ success: false, message: "Somthing went wrong", })
         }
     }
+    async updateUser(req, res) {
+        try {
+            let { _id, name, title, first_name, middle_name, last_name, display_name, website, suffix, email,
+                company, password, number, profile_pic, gst_registration_type, gstin, is_sub_customer, bill_with_type,
+                billing_address, shipping_address, notes, tax_info, payment_and_billing, attachments, other, mobile_no, fax, created_by
+                , customer_meta } = req.body
+            let getuser = await CustomerModel.findOne({ _id: _id }).lean()
+            if (getuser) {
+                if (name) {
+                    getuser.name = name
+                }
+                if (title) {
+                    getuser.title = title
+                }
+                if (first_name) {
+                    getuser.first_name = first_name
+                }
+                if (middle_name) {
+                    getuser.middle_name = middle_name
+                }
+                if (last_name) {
+                    getuser.last_name = last_name
+                }
+                if (display_name) {
+                    getuser.display_name = display_name
+                }
+                if (website) {
+                    getuser.website = website
+                }
+                if (suffix) {
+                    getuser.suffix = suffix
+                }
+                
+                if (email) {
+                    getuser.email = email
+                }
+                if (other) {
+                    getuser.other = other
+                }
+                if (mobile_no) {
+                    getuser.mobile_no = mobile_no
+                }
+                if (fax) {
+                    getuser.fax = fax
+                }
+                if (company) {
+                    getuser.company = company
+                }
+                if (number) {
+                    getuser.number = number
+                }
+                if (gst_registration_type) {
+                    getuser.gst_registration_type = gst_registration_type
+                }
+                if (gstin) {
+                    getuser.gstin = gstin
+                }
+                //////
+                if (is_sub_customer) {
+                    getuser.is_sub_customer = is_sub_customer
+                }
+                if (bill_with_type) {
+                    getuser.bill_with_type = bill_with_type
+                }
+                if (billing_address) {
+                    getuser.billing_address = billing_address
+                }
+                if (shipping_address) {
+                    getuser.shipping_address = shipping_address
+                }
+                
+                if (notes) {
+                    getuser.notes = notes
+                }
+                if (tax_info) {
+                    getuser.tax_info = tax_info
+                }
+                if (payment_and_billing) {
+                    getuser.payment_and_billing = payment_and_billing
+                }
+                if (attachments) {
+                    getuser.attachments = attachments
+                }
+                if (customer_meta) {
+                    getuser.customer_meta = customer_meta
+                }
+                 let update = await CustomerModel.findOneAndUpdate({ _id: _id },getuser)
+                res.json({ code: 200, success: true, message: 'update customer successfully', data: update })
+            } else {
+                res.json({ code: 404, success: true, message: 'user id is not exist' })
+            }
 
+        } catch (error) {
+            console.log("Error in catch", error)
+            res.status(500).json({ success: false, message: "Somthing went wrong", })
+        }
+    }
     async getCustomer(req, res) {
         try {
-           console.log("req.query._id,",req.query._id)
-            let getUser = await CustomerModel.find({created_by: req.query._id},{name:1,first_name:1,last_name:1,display_name:1})
+            console.log("req.query._id,", req.query._id)
+            let getUser = await CustomerModel.find({ created_by: req.query._id }, { name: 1, first_name: 1, last_name: 1, display_name: 1 })
             res.json({ code: 200, success: true, message: "Get list successfully ", data: getUser })
         } catch (error) {
             console.log("Error in catch", error)
@@ -149,19 +258,21 @@ class adminAuth {
             }
             let query = {}
             console.log(req.body)
-            if (req.body.searchData ){
-                query = { $or: [{ email: { $regex: req.body.searchData, $options: "i" } },
-                 { name: { $regex: req.body.searchData, $options: "i" } },
-                 { first_name: { $regex: req.body.searchData, $options: "i" } },
-                 { display_name: { $regex: req.body.searchData, $options: "i" } },
-                 { middle_name: { $regex: req.body.searchData, $options: "i" } }] }
+            if (req.body.searchData) {
+                query = {
+                    $or: [{ email: { $regex: req.body.searchData, $options: "i" } },
+                    { name: { $regex: req.body.searchData, $options: "i" } },
+                    { first_name: { $regex: req.body.searchData, $options: "i" } },
+                    { display_name: { $regex: req.body.searchData, $options: "i" } },
+                    { middle_name: { $regex: req.body.searchData, $options: "i" } }]
+                }
             }
-            if (req.body._id ){
+            if (req.body._id) {
                 query.created_by = req.body._id
             }
-            console.log("request",query)
+            console.log("request", query)
             let data = await CustomerModel.paginate(query, options)
-        //    console.log("req.query._id,",data)
+            //    console.log("req.query._id,",data)
             // let getUser = await CustomerModel.find({created_by: req.query._id},{name:1,first_name:1,last_name:1,display_name:1})
             res.json({ code: 200, success: true, message: "Get list successfully ", data: data })
         } catch (error) {
@@ -171,8 +282,8 @@ class adminAuth {
     }
     async getCustomerDetails(req, res) {
         try {
-           console.log("req.query._id,",req.params._id)
-            let getUser = await CustomerModel.findOne({_id: req.params._id})
+            console.log("req.query._id,", req.params._id)
+            let getUser = await CustomerModel.findOne({ _id: req.params._id })
             res.json({ code: 200, success: true, message: "Get data successfully ", data: getUser })
         } catch (error) {
             console.log("Error in catch", error)

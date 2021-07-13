@@ -6,6 +6,10 @@ var CustomerSchema = new Schema({
     type: String,
     trim: true
   },
+  name: {
+    type: String,
+    trim: true,
+  },
   first_name: {
     type: String,
     trim: true
