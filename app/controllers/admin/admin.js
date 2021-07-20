@@ -9,6 +9,8 @@ const jwt = require('jsonwebtoken')
 const TransactionModal = require('../../models/transactions')
 const DocumentsModel = require('../../models/userDocument')
 const CustomerModel = require('../../models/admin/customers')
+const ProducrServiceModel = require('../../models/admin/product_service')
+const InvoiceModel = require('../../models/admin/invoice')
 class adminAuth {
     constructor() {
         return {
@@ -19,12 +21,12 @@ class adminAuth {
             uploadeFile: this.uploadeFile.bind(this),
             getCustomerList: this.getCustomerList.bind(this),
             getCustomerDetails: this.getCustomerDetails.bind(this),
-            updateUser: this.updateUser.bind(this)
-            // createCustomer: this.createCustomer.bind(this),
-            // getCustomer: this.getCustomer.bind(this),
-            // uploadeFile: this.uploadeFile.bind(this),
-            // getCustomerList: this.getCustomerList.bind(this),
-            // getCustomerDetails: this.getCustomerDetails.bind(this),
+            updateUser: this.updateUser.bind(this),
+            getInvoiceNumber: this.getInvoiceNumber.bind(this),
+            createProductService: this.createProductService.bind(this),
+            getProductService: this.getProductService.bind(this),
+            createInvoice: this.createInvoice.bind(this),
+            checkInvoiceNumber: this.checkInvoiceNumber.bind(this),
             // updateUser: this.updateUser.bind(this)
 
 
@@ -36,7 +38,7 @@ class adminAuth {
             let { email, password } = req.body
             let getUser = await UsersAdminModel.findOne({ $and: [{ email: email }, { login_type: 'manual' }, { user_type: 'subadmin' }] },
             ).lean()
-            console.log("getUser", getUser)
+            // console.log("getUser", getUser)
             if (getUser) {
                 let verifypass = await bcrypt.compareSync(password, getUser.password);
                 if (verifypass) {
@@ -60,7 +62,7 @@ class adminAuth {
 
     async signup(req, res) {
         try {
-            let { name, organization, password, email, location } = req.body
+            let { name, organization, password, email, location , state} = req.body
             let getUser = await UsersAdminModel.findOne({ $and: [{ email: email }, { login_type: 'manual' }, { user_type: 'subadmin' }] }).lean()
             if (getUser) {
                 res.json({ code: 404, success: false, message: 'Email is already register', })
@@ -74,6 +76,7 @@ class adminAuth {
                     email: email,
                     organization: organization,
                     location: location,
+                    state: state,
                     user_type: 'subadmin',
                     created_by: "",
                     login_type: 'manual'
@@ -240,7 +243,7 @@ class adminAuth {
     }
     async getCustomer(req, res) {
         try {
-            console.log("req.query._id,", req.query._id)
+            // console.log("req.query._id,", req.query._id)
             let getUser = await CustomerModel.find({ created_by: req.query._id }, { name: 1, first_name: 1, last_name: 1, display_name: 1 })
             res.json({ code: 200, success: true, message: "Get list successfully ", data: getUser })
         } catch (error) {
@@ -282,7 +285,7 @@ class adminAuth {
     }
     async getCustomerDetails(req, res) {
         try {
-            console.log("req.query._id,", req.params._id)
+            // console.log("req.query._id,", req.params._id)
             let getUser = await CustomerModel.findOne({ _id: req.params._id })
             res.json({ code: 200, success: true, message: "Get data successfully ", data: getUser })
         } catch (error) {
@@ -304,7 +307,108 @@ class adminAuth {
         }
     }
 
+    async getInvoiceNumber(req , res){
+        try {
+            let flage = false
+            let fourDigitsRandom
+            do {
+                fourDigitsRandom = await Math.floor(1000 + Math.random() * 9000);
+                let getData = await InvoiceModel.find({ invoice_number: fourDigitsRandom })
+                if (getData.length > 0) {
+                    flage = true
+                } else {
+                    flage = false
+                }
+            }
+            while (flage);
+            res.json({ code: 200, success: true, message: "get Successfull",data: fourDigitsRandom })
+            // return  fourDigitsRandom
+        } catch (error) {
+            res.json({ code: 400, success: false, message: "Internal server error", })
+        }
+    }
+    async checkInvoiceNumber(req , res){
+        try {
+            // console.log("req.body.invoice_number",req.body.invoice_number)
+            let getData = await InvoiceModel.findOne({ invoice_number: req.body.invoice_number })
+            if(getData){
+                res.json({ code: 400, success: true, message: "this number is already exist", })
+            }else{
+                res.json({ code: 200, success: true, message: "this number is availble" })
+            }
+        } catch (error) {
+            res.json({ code: 400, success: false, message: "Internal server error", })
+        }
+    }
+    async createProductService(req, res) {
+        try {
+            const { name, hsn_sac, discription, price, tax,created_by } =  req.body
+            // add-product-service
+            let getdata = await ProducrServiceModel.findOne({ name: name, created_by:created_by  })
+            if (getdata) {
+                res.json({ code: 200, success: true, message: 'name is already exist', data: getdata })
+            } else {
+                let savedata = new ProducrServiceModel({
+                    name: name,
+                    hsn_sac: hsn_sac,
+                    discription: discription,
+                    price: price,
+                    tax: tax,
+                    created_by: created_by,
+                })
+                let data = await savedata.save();
+                res.json({ code: 200, success: true, message: 'Create customer successfully', data: data })
+            }
+        } catch (error) {
+            console.log("Error in catch", error)
+            res.status(500).json({ success: false, message: "Somthing went wrong", })
+        }
+    }
+    async getProductService(req, res) {
+        try {
+            // console.log("req.query._id,", req.query._id)
+            let getData = await ProducrServiceModel.find({ created_by: req.query._id })
+            res.json({ code: 200, success: true, message: "Get list successfully ", data: getData })
+        } catch (error) {
+            console.log("Error in catch", error)
+            res.status(500).json({ success: false, message: "Internal server error", })
+        }
+    }
 
+    async createInvoice(req, res) {
+        try {
+            const {created_by,customer_id,invoice_number,invoice_type,invoice_date, due_date,total,subtotal ,balance_due,invoice_message,statement_message,
+                attachments, products_meta,recurring_interval} =  req.body
+            // add-product-service
+            let getdata = await InvoiceModel.findOne({ invoice_number : invoice_number, created_by:created_by  })
+            if (getdata) {
+                res.json({ code: 200, success: true, message: 'invoice_number is already exist', data: getdata })
+            } else {
+                let savedata = new InvoiceModel({
+                    created_by: created_by,
+                    customer_id: customer_id,
+                    invoice_number: invoice_number,
+                    invoice_type: invoice_type,
+                    invoice_date: invoice_date,
+                    created_by: created_by,
+                    due_date: due_date,
+                    total: total,
+                    subtotal: subtotal,
+                    balance_due: balance_due,
+                    invoice_message: invoice_message,
+                    statement_message:statement_message,
+                    attachments: attachments,
+                    products_meta: products_meta,
+                    recurring_interval: recurring_interval,
+                })
+                let data = await savedata.save();
+                res.json({ code: 200, success: true, message: 'Create invoice successfully', data: data })
+            }
+        } catch (error) {
+            console.log("Error in catch", error)
+            res.status(500).json({ success: false, message: "Somthing went wrong", })
+        }
+    }
 
 
 

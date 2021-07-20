@@ -74,6 +74,10 @@ var UsersSchema = new Schema({
   location: {
     type: { any: [Schema.Types.Mixed] }
   },
+  state: {
+    type: String,
+    trim: true
+  },
   forgot_otp: {
     type: String,
     trim: true,

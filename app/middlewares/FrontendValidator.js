@@ -15,7 +15,10 @@ class FrontEntValidator {
             setForgotPass: this.setForgotPass.bind(this),
             chekUserName: this.chekUserName.bind(this),
             chekRedditUserName: this.chekRedditUserName.bind(this),
-            resetPassword: this.resetPassword.bind(this)
+            resetPassword: this.resetPassword.bind(this),
+/////////////////////////////////for ba admin//////////////////////////////////////////
+            createProductService: this.createProductService.bind(this),
+            checkInvoiceNumber: this.checkInvoiceNumber.bind(this)
         }
     }
     async _validationErrorsFormat(req) {
@@ -34,10 +37,67 @@ class FrontEntValidator {
         }
     }
 
-    
+
+    async createProductService(req, res, next) {
+        // return next();
+        // console.log("req.body",req.body , Object.keys(req.body).length)
+        if (Object.keys(req.body).length <= 6) {
+            req.checkBody({
+                name: {
+                    notEmpty: true,
+                    errorMessage: { "field_name": "name", "error_msg": 'name is required' },
+                },
+                created_by: {
+                    notEmpty: true,
+                    errorMessage: { "field_name": "created_by", "error_msg": 'created_by is required' },
+                },
+
+            })
+            const errors = await this._validationErrorsFormat(req);
+            if (errors) {
+                // return res.json({ code : 422 ,success: false, message: errors[0] });
+                return res.json({ code: 422, success: false, message: "Resolve these errors", errors: errors });
+            } else {
+                return next();
+            }
+        } else {
+            res.json({ code: 422, success: false, message: "Please send proper parameters", errors: null })
+        }
+    }
+    async checkInvoiceNumber(req, res, next) {
+        // return next();
+        if (Object.keys(req.body).length <= 2) {
+            req.checkBody({
+                invoice_number: {
+                    notEmpty: true,
+                    matches: {
+                        // more than one options must be passed as arrays
+                        options: /^[0-9]{4,4}$/i,
+                        // errorMessage: 'Mobile invoice_number should contain minimum 10 invoice_number'
+                        errorMessage: { "field_name": "invoice_number", "error_msg": 'invoice_number should contain minimum 4 invoice_number' },
+                    },
+                    errorMessage: { "field_name": "invoice_number", "error_msg": 'invoice_number is required' },
+                },
+
+            })
+
+
+
+            const errors = await this._validationErrorsFormat(req);
+            if (errors) {
+                // return res.json({ code : 422 ,success: false, message: errors[0] });
+                return res.json({ code: 422, success: false, message: "Resolve these errors", errors: errors });
+            } else {
+                return next();
+            }
+        } else {
+            res.status(422).json({ code: 422, success: false, message: "Please send proper parameters", errors: null })
+        }
+    }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
     async signUp(req, res, next) {
         // return next();
-        if (req.body.login_type== 'manual'){
+        if (req.body.login_type == 'manual') {
             if (Object.keys(req.body).length <= 5) {
                 req.checkBody({
                     name: {
@@ -57,17 +117,17 @@ class FrontEntValidator {
                         errorMessage: { "field_name": "login_type", "error_msg": 'login_type is required' },
                     },
                 })
-            const errors = await this._validationErrorsFormat(req);
-            if (errors) {
-                // return res.json({ code : 422 ,success: false, message: errors[0] });
-                return res.status(422).json({ code: 422, success: false, message: "Resolve these errors", errors: errors });
+                const errors = await this._validationErrorsFormat(req);
+                if (errors) {
+                    // return res.json({ code : 422 ,success: false, message: errors[0] });
+                    return res.status(422).json({ code: 422, success: false, message: "Resolve these errors", errors: errors });
+                } else {
+                    return next();
+                }
             } else {
-                return next();
+                res.status(422).json({ code: 422, success: false, message: "Please send proper parameters", errors: null })
             }
         } else {
-            res.status(422).json({ code: 422, success: false, message: "Please send proper parameters", errors: null })
-        }
-        }else{
             if (Object.keys(req.body).length <= 5) {
                 req.checkBody({
                     name: {
@@ -87,86 +147,46 @@ class FrontEntValidator {
                         errorMessage: { "field_name": "login_type", "error_msg": 'login_type is required' },
                     },
                 })
-            const errors = await this._validationErrorsFormat(req);
-            if (errors) {
-                // return res.json({ code : 422 ,success: false, message: errors[0] });
-                return res.status(422).json({ code: 422, success: false, message: "Resolve these errors", errors: errors });
+                const errors = await this._validationErrorsFormat(req);
+                if (errors) {
+                    // return res.json({ code : 422 ,success: false, message: errors[0] });
+                    return res.status(422).json({ code: 422, success: false, message: "Resolve these errors", errors: errors });
+                } else {
+                    return next();
+                }
             } else {
-                return next();
+                res.status(422).json({ code: 422, success: false, message: "Please send proper parameters", errors: null })
             }
-        } else {
-            res.status(422).json({ code: 422, success: false, message: "Please send proper parameters", errors: null })
-        } 
         }
     }
-    async verifyOtp (req, res, next) {
+    async verifyOtp(req, res, next) {
         // return next();
-        if (Object.keys(req.body).length <=2) {
-                req.checkBody({
-                    number: {
-                        notEmpty: true,
-                        matches: {
-                            // more than one options must be passed as arrays
-                            options: /^[0-9]{6,10}$/i,
-                            // errorMessage: 'Mobile number should contain minimum 10 number'
-                            errorMessage: { "field_name": "number", "error_msg": 'Mobile number should contain minimum 6 number' },
-                        },
-                        errorMessage: { "field_name": "number", "error_msg": 'Contact Number is required' },
+        if (Object.keys(req.body).length <= 2) {
+            req.checkBody({
+                number: {
+                    notEmpty: true,
+                    matches: {
+                        // more than one options must be passed as arrays
+                        options: /^[0-9]{6,10}$/i,
+                        // errorMessage: 'Mobile number should contain minimum 10 number'
+                        errorMessage: { "field_name": "number", "error_msg": 'Mobile number should contain minimum 6 number' },
                     },
-                    otp: {
-                        notEmpty: true,
-                        matches: {
-                            // more than one options must be passed as arrays
-                            options: /^[0-9]{4,4}$/i,
-                            // errorMessage: 'Mobile number should contain minimum 10 number'
-                            errorMessage: { "field_name": "otp", "error_msg": 'Otp should contain minimum 4 number' },
-                        },
-                        errorMessage: { "field_name": "otp", "error_msg": 'Otp is required' },
+                    errorMessage: { "field_name": "number", "error_msg": 'Contact Number is required' },
+                },
+                otp: {
+                    notEmpty: true,
+                    matches: {
+                        // more than one options must be passed as arrays
+                        options: /^[0-9]{4,4}$/i,
+                        // errorMessage: 'Mobile number should contain minimum 10 number'
+                        errorMessage: { "field_name": "otp", "error_msg": 'Otp should contain minimum 4 number' },
                     },
-                    
-                })
+                    errorMessage: { "field_name": "otp", "error_msg": 'Otp is required' },
+                },
 
-           
+            })
 
-            const errors = await this._validationErrorsFormat(req);
-            if (errors) {
-                // return res.json({ code : 422 ,success: false, message: errors[0] });
-                return res.status(422).json({ code: 422, success: false, message: "Resolve these errors", errors: errors });
-            } else {
-                return next();
-            }
-        } else {
-            res.status(422).json({ code: 422, success: false, message: "Please send proper parameters", errors: null })
-        }
-    }
-    async verifyforgot (req, res, next) {
-        // return next();
-        if (Object.keys(req.body).length <=2) {
-                req.checkBody({
-                    email: {
-                        notEmpty: true,
-                        // matches: {
-                        //     // more than one options must be passed as arrays
-                        //     options: /^[0-9]{6,10}$/i,
-                        //     // errorMessage: 'Mobile number should contain minimum 10 number'
-                        //     errorMessage: { "field_name": "number", "error_msg": 'Mobile number should contain minimum 6 number' },
-                        // },
-                        errorMessage: { "field_name": "email", "error_msg": 'Email is required' },
-                    },
-                    otp: {
-                        notEmpty: true,
-                        matches: {
-                            // more than one options must be passed as arrays
-                            options: /^[0-9]{4,4}$/i,
-                            // errorMessage: 'Mobile number should contain minimum 10 number'
-                            errorMessage: { "field_name": "otp", "error_msg": 'Otp should contain minimum 4 number' },
-                        },
-                        errorMessage: { "field_name": "otp", "error_msg": 'Otp is required' },
-                    },
-                    
-                })
 
-           
 
             const errors = await this._validationErrorsFormat(req);
             if (errors) {
@@ -179,95 +199,35 @@ class FrontEntValidator {
             res.status(422).json({ code: 422, success: false, message: "Please send proper parameters", errors: null })
         }
     }
-    async setForgotPass (req, res, next) {
+    async verifyforgot(req, res, next) {
         // return next();
-        if (Object.keys(req.body).length <=2) {
-                req.checkBody({
-                    email: {
-                        notEmpty: true,
-                        // matches: {
-                        //     // more than one options must be passed as arrays
-                        //     options: /^[0-9]{6,10}$/i,
-                        //     // errorMessage: 'Mobile number should contain minimum 10 number'
-                        //     errorMessage: { "field_name": "number", "error_msg": 'Mobile number should contain minimum 6 number' },
-                        // },
-                        errorMessage: { "field_name": "email", "error_msg": 'Email is required' },
-                    },
-                    newPassword: {
-                        notEmpty: true,
-                        errorMessage: { "field_name": "newPassword", "error_msg": 'newPassword is required' },
-                    },
-                    
-                })
-
-           
-
-            const errors = await this._validationErrorsFormat(req);
-            if (errors) {
-                // return res.json({ code : 422 ,success: false, message: errors[0] });
-                return res.status(422).json({ code: 422, success: false, message: "Resolve these errors", errors: errors });
-            } else {
-                return next();
-            }
-        } else {
-            res.status(422).json({ code: 422, success: false, message: "Please send proper parameters", errors: null })
-        }
-    }
-    async login (req, res, next) {
-        // return next();
-        if (Object.keys(req.body).length <=2) {
-                req.checkBody({
-                    email: {
-                        notEmpty: true,
-                        errorMessage: { "field_name": "email", "error_msg": 'email is required' },
-                    },
-                    password: {
-                        notEmpty: true,
-                        errorMessage: { "field_name": "password", "error_msg": 'password is required' },
-                    },
-                    
-                })
-            const errors = await this._validationErrorsFormat(req);
-            if (errors) {
-                // return res.json({ code : 422 ,success: false, message: errors[0] });
-                return res.status(422).json({ code: 422, success: false, message: "Resolve these errors", errors: errors });
-            } else {
-                return next();
-            }
-        } else {
-            res.status(422).json({ code: 422, success: false, message: "Please send proper parameters", errors: null })
-        }
-    }
-    async update (req, res, next) {
-        // return next();
-        if (Object.keys(req.body).length <=11) {
-                req.checkBody({
-                    _id: {
-                        notEmpty: true,
-                        errorMessage: { "field_name": "_id", "error_msg": '_id is required' },
-                    },
-                    // email: {
-                    //     notEmpty: true,
-                    //     errorMessage: { "field_name": "email", "error_msg": 'email is required' },
+        if (Object.keys(req.body).length <= 2) {
+            req.checkBody({
+                email: {
+                    notEmpty: true,
+                    // matches: {
+                    //     // more than one options must be passed as arrays
+                    //     options: /^[0-9]{6,10}$/i,
+                    //     // errorMessage: 'Mobile number should contain minimum 10 number'
+                    //     errorMessage: { "field_name": "number", "error_msg": 'Mobile number should contain minimum 6 number' },
                     // },
-                    // name: {
-                    //     notEmpty: true,
-                    //     errorMessage: { "field_name": "name", "error_msg": 'name is required' },
-                    // },
-                    // number: {
-                    //     notEmpty: true,
-                    //     errorMessage: { "field_name": "number", "error_msg": 'number is required' },
-                    // },
-                    // username: {
-                    //     notEmpty: true,
-                    //     errorMessage: { "field_name": "username", "error_msg": 'username is required' },
-                    // },
-                    login_type: {
-                        notEmpty: true,
-                        errorMessage: { "field_name": "login_type", "error_msg": 'login_type is required' },
+                    errorMessage: { "field_name": "email", "error_msg": 'Email is required' },
+                },
+                otp: {
+                    notEmpty: true,
+                    matches: {
+                        // more than one options must be passed as arrays
+                        options: /^[0-9]{4,4}$/i,
+                        // errorMessage: 'Mobile number should contain minimum 10 number'
+                        errorMessage: { "field_name": "otp", "error_msg": 'Otp should contain minimum 4 number' },
                     },
-                    
-                })
+                    errorMessage: { "field_name": "otp", "error_msg": 'Otp is required' },
+                },
+
+            })
+
+
+
             const errors = await this._validationErrorsFormat(req);
             if (errors) {
                 // return res.json({ code : 422 ,success: false, message: errors[0] });
@@ -279,25 +239,125 @@ class FrontEntValidator {
             res.status(422).json({ code: 422, success: false, message: "Please send proper parameters", errors: null })
         }
     }
-    
-    async submitReferral (req, res, next) {
+    async setForgotPass(req, res, next) {
         // return next();
-        if (Object.keys(req.body).length <=3) {
-                req.checkBody({
-                    referral_code: {
-                        notEmpty: true,
-                        errorMessage: { "field_name": "referral_code", "error_msg": 'referral_code is required' },
-                    },
-                    username: {
-                        notEmpty: true,
-                        errorMessage: { "field_name": "username", "error_msg": 'username is required' },
-                    },
-                    email: {
-                        notEmpty: true,
-                        errorMessage: { "field_name": "email", "error_msg": 'email is required' },
-                    }
-                    
-                })
+        if (Object.keys(req.body).length <= 2) {
+            req.checkBody({
+                email: {
+                    notEmpty: true,
+                    // matches: {
+                    //     // more than one options must be passed as arrays
+                    //     options: /^[0-9]{6,10}$/i,
+                    //     // errorMessage: 'Mobile number should contain minimum 10 number'
+                    //     errorMessage: { "field_name": "number", "error_msg": 'Mobile number should contain minimum 6 number' },
+                    // },
+                    errorMessage: { "field_name": "email", "error_msg": 'Email is required' },
+                },
+                newPassword: {
+                    notEmpty: true,
+                    errorMessage: { "field_name": "newPassword", "error_msg": 'newPassword is required' },
+                },
+
+            })
+
+
+
+            const errors = await this._validationErrorsFormat(req);
+            if (errors) {
+                // return res.json({ code : 422 ,success: false, message: errors[0] });
+                return res.status(422).json({ code: 422, success: false, message: "Resolve these errors", errors: errors });
+            } else {
+                return next();
+            }
+        } else {
+            res.status(422).json({ code: 422, success: false, message: "Please send proper parameters", errors: null })
+        }
+    }
+    async login(req, res, next) {
+        // return next();
+        if (Object.keys(req.body).length <= 2) {
+            req.checkBody({
+                email: {
+                    notEmpty: true,
+                    errorMessage: { "field_name": "email", "error_msg": 'email is required' },
+                },
+                password: {
+                    notEmpty: true,
+                    errorMessage: { "field_name": "password", "error_msg": 'password is required' },
+                },
+
+            })
+            const errors = await this._validationErrorsFormat(req);
+            if (errors) {
+                // return res.json({ code : 422 ,success: false, message: errors[0] });
+                return res.status(422).json({ code: 422, success: false, message: "Resolve these errors", errors: errors });
+            } else {
+                return next();
+            }
+        } else {
+            res.status(422).json({ code: 422, success: false, message: "Please send proper parameters", errors: null })
+        }
+    }
+    async update(req, res, next) {
+        // return next();
+        if (Object.keys(req.body).length <= 11) {
+            req.checkBody({
+                _id: {
+                    notEmpty: true,
+                    errorMessage: { "field_name": "_id", "error_msg": '_id is required' },
+                },
+                // email: {
+                //     notEmpty: true,
+                //     errorMessage: { "field_name": "email", "error_msg": 'email is required' },
+                // },
+                // name: {
+                //     notEmpty: true,
+                //     errorMessage: { "field_name": "name", "error_msg": 'name is required' },
+                // },
+                // number: {
+                //     notEmpty: true,
+                //     errorMessage: { "field_name": "number", "error_msg": 'number is required' },
+                // },
+                // username: {
+                //     notEmpty: true,
+                //     errorMessage: { "field_name": "username", "error_msg": 'username is required' },
+                // },
+                login_type: {
+                    notEmpty: true,
+                    errorMessage: { "field_name": "login_type", "error_msg": 'login_type is required' },
+                },
+
+            })
+            const errors = await this._validationErrorsFormat(req);
+            if (errors) {
+                // return res.json({ code : 422 ,success: false, message: errors[0] });
+                return res.status(422).json({ code: 422, success: false, message: "Resolve these errors", errors: errors });
+            } else {
+                return next();
+            }
+        } else {
+            res.status(422).json({ code: 422, success: false, message: "Please send proper parameters", errors: null })
+        }
+    }
+
+    async submitReferral(req, res, next) {
+        // return next();
+        if (Object.keys(req.body).length <= 3) {
+            req.checkBody({
+                referral_code: {
+                    notEmpty: true,
+                    errorMessage: { "field_name": "referral_code", "error_msg": 'referral_code is required' },
+                },
+                username: {
+                    notEmpty: true,
+                    errorMessage: { "field_name": "username", "error_msg": 'username is required' },
+                },
+                email: {
+                    notEmpty: true,
+                    errorMessage: { "field_name": "email", "error_msg": 'email is required' },
+                }
+
+            })
             const errors = await this._validationErrorsFormat(req);
             if (errors) {
                 // return res.json({ code : 422 ,success: false, message: errors[0] });
@@ -310,16 +370,16 @@ class FrontEntValidator {
         }
     }
     ///////////////////////////////////////////////////////////
-    async chekUserName (req, res, next) {
+    async chekUserName(req, res, next) {
         // return next();
-        if (Object.keys(req.body).length <=2) {
-                req.checkBody({
-                    username: {
-                        notEmpty: true,
-                        errorMessage: { "field_name": "username", "error_msg": 'username is required' },
-                    }
-                    
-                })
+        if (Object.keys(req.body).length <= 2) {
+            req.checkBody({
+                username: {
+                    notEmpty: true,
+                    errorMessage: { "field_name": "username", "error_msg": 'username is required' },
+                }
+
+            })
             const errors = await this._validationErrorsFormat(req);
             if (errors) {
                 // return res.json({ code : 422 ,success: false, message: errors[0] });
@@ -331,47 +391,16 @@ class FrontEntValidator {
             res.status(422).json({ code: 422, success: false, message: "Please send proper parameters", errors: null })
         }
     }
-    async chekRedditUserName (req, res, next) {
+    async chekRedditUserName(req, res, next) {
         // return next();
-        if (Object.keys(req.body).length <=2) {
-                req.checkBody({
-                    reddit_username: {
-                        notEmpty: true,
-                        errorMessage: { "field_name": "reddit_username", "error_msg": 'reddit_username is required' },
-                    }
-                    
-                })
-            const errors = await this._validationErrorsFormat(req);
-            if (errors) {
-                // return res.json({ code : 422 ,success: false, message: errors[0] });
-                return res.status(422).json({ code: 422, success: false, message: "Resolve these errors", errors: errors });
-            } else {
-                return next();
-            }
-        } else {
-            res.status(422).json({ code: 422, success: false, message: "Please send proper parameters", errors: null })
-        }
-    }
+        if (Object.keys(req.body).length <= 2) {
+            req.checkBody({
+                reddit_username: {
+                    notEmpty: true,
+                    errorMessage: { "field_name": "reddit_username", "error_msg": 'reddit_username is required' },
+                }
 
-    async resetPassword (req, res, next) {
-        // return next();
-        if (Object.keys(req.body).length <=3) {
-                req.checkBody({
-                    oldPassword: {
-                        notEmpty: true,
-                        errorMessage: { "field_name": "oldPassword", "error_msg": 'oldPassword is required' },
-                    },
-                    newPassword: {
-                        notEmpty: true,
-                        errorMessage: { "field_name": "newPassword", "error_msg": 'newPassword is required' },
-                    },
-                    _id: {
-                        notEmpty: true,
-                        errorMessage: { "field_name": "_id", "error_msg": '_id is required' },
-                    }
-
-                    
-                })
+            })
             const errors = await this._validationErrorsFormat(req);
             if (errors) {
                 // return res.json({ code : 422 ,success: false, message: errors[0] });
@@ -384,8 +413,39 @@ class FrontEntValidator {
         }
     }
 
+    async resetPassword(req, res, next) {
+        // return next();
+        if (Object.keys(req.body).length <= 3) {
+            req.checkBody({
+                oldPassword: {
+                    notEmpty: true,
+                    errorMessage: { "field_name": "oldPassword", "error_msg": 'oldPassword is required' },
+                },
+                newPassword: {
+                    notEmpty: true,
+                    errorMessage: { "field_name": "newPassword", "error_msg": 'newPassword is required' },
+                },
+                _id: {
+                    notEmpty: true,
+                    errorMessage: { "field_name": "_id", "error_msg": '_id is required' },
+                }
 
-    
+
+            })
+            const errors = await this._validationErrorsFormat(req);
+            if (errors) {
+                // return res.json({ code : 422 ,success: false, message: errors[0] });
+                return res.status(422).json({ code: 422, success: false, message: "Resolve these errors", errors: errors });
+            } else {
+                return next();
+            }
+        } else {
+            res.status(422).json({ code: 422, success: false, message: "Please send proper parameters", errors: null })
+        }
+    }
+
+
+
 }
 
 module.exports = new FrontEntValidator();
