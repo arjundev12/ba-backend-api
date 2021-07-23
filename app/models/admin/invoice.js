@@ -75,6 +75,16 @@ var invoiceSchema = new Schema({
     type: String,
     trim: true, 
   },
+  status: {
+    type: String,
+    trim: true, 
+    default:'open'
+  },
+  type1: {
+    type: String,
+    trim: true,
+  },
+
   products_meta: {
     type: { any: [Schema.Types.Mixed] }  
   },

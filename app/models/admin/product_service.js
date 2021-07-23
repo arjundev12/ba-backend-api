@@ -31,10 +31,15 @@ var productServiceSchema = new Schema({
     default: ""
   },
   tax: {
+    type: Number,
+    trim: true,
+    default: 0
+  },
+  tax_type: {
     type: String,
     trim: true,
-    default: ""
-  },
+    default:""
+  }
   //////////////////////end//////////////////
 
 }, { timestamps: true });

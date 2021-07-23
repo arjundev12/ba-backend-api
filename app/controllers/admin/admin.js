@@ -27,6 +27,12 @@ class adminAuth {
             getProductService: this.getProductService.bind(this),
             createInvoice: this.createInvoice.bind(this),
             checkInvoiceNumber: this.checkInvoiceNumber.bind(this),
+            getInvoiceList: this.getInvoiceList.bind(this)
+            // updateUser: this.updateUser.bind(this)
+            // getProductService: this.getProductService.bind(this),
+            // createInvoice: this.createInvoice.bind(this),
+            // checkInvoiceNumber: this.checkInvoiceNumber.bind(this),
+            // getInvoiceList: this.getInvoiceList.bind(this)
             // updateUser: this.updateUser.bind(this)
 
 
@@ -342,7 +348,7 @@ class adminAuth {
     }
     async createProductService(req, res) {
         try {
-            const { name, hsn_sac, discription, price, tax,created_by } =  req.body
+            const { name, hsn_sac, discription, price, tax,created_by ,tax_type} =  req.body
             // add-product-service
             let getdata = await ProducrServiceModel.findOne({ name: name, created_by:created_by  })
             if (getdata) {
@@ -354,6 +360,7 @@ class adminAuth {
                     discription: discription,
                     price: price,
                     tax: tax,
+                    tax_type: tax_type,
                     created_by: created_by,
                 })
                 let data = await savedata.save();
@@ -400,6 +407,8 @@ class adminAuth {
                     attachments: attachments,
                     products_meta: products_meta,
                     recurring_interval: recurring_interval,
+                    type1 : recurring_interval.interval_time =="" ? 'invoice' : ""
+                    
                 })
                 let data = await savedata.save();
                 res.json({ code: 200, success: true, message: 'Create invoice successfully', data: data })
@@ -410,8 +419,38 @@ class adminAuth {
         }
     }
 
+    
 
-
+    async getInvoiceList(req, res) {
+        try {
+            let options = {
+                page: Number(req.body.page) || 1,
+                limit: Number(req.body.limit) || 10,
+                // sort: {  "subcategory_meta.name":1,"name": 1, },
+                lean: true,
+            }
+            let query = {type1:"invoice"}
+            console.log(req.body)
+            if (req.body.searchData) {
+                query = {
+                    $or: [{ email: { $regex: req.body.searchData, $options: "i" } },
+                    { name: { $regex: req.body.searchData, $options: "i" } },
+                    { first_name: { $regex: req.body.searchData, $options: "i" } },
+                    { display_name: { $regex: req.body.searchData, $options: "i" } },
+                    { middle_name: { $regex: req.body.searchData, $options: "i" } }]
+                }
+            }
+            if (req.body._id) {
+                query.customer_id = req.body._id
+            }
+            console.log("request", query)
+            let data = await InvoiceModel.paginate(query, options)
+            res.json({ code: 200, success: true, message: "Get list successfully ", data: data })
+        }catch (error) {
+            console.log("Error in catch", error)
+            res.status(500).json({ success: false, message: "Internal server error", })
+        }
+    }
 
 
 
