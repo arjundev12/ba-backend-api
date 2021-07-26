@@ -26,6 +26,11 @@ router.post('/check-invoice-no',validationData.checkInvoiceNumber,admin_controll
 router.post('/create-invoice',admin_controller.createInvoice )
 router.post('/get-invoice-list',admin_controller.getInvoiceList )
 
+router.get('/get-order-no',admin_controller.getOrderNumber )
+router.post('/create-order',admin_controller.createOrder )
+
+
+
 
 
 module.exports = router;

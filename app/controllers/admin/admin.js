@@ -10,7 +10,8 @@ const TransactionModal = require('../../models/transactions')
 const DocumentsModel = require('../../models/userDocument')
 const CustomerModel = require('../../models/admin/customers')
 const ProducrServiceModel = require('../../models/admin/product_service')
-const InvoiceModel = require('../../models/admin/invoice')
+const InvoiceModel = require('../../models/admin/invoice');
+const OrderModel = require('../../models/admin/orders');
 class adminAuth {
     constructor() {
         return {
@@ -27,9 +28,9 @@ class adminAuth {
             getProductService: this.getProductService.bind(this),
             createInvoice: this.createInvoice.bind(this),
             checkInvoiceNumber: this.checkInvoiceNumber.bind(this),
-            getInvoiceList: this.getInvoiceList.bind(this)
-            // updateUser: this.updateUser.bind(this)
-            // getProductService: this.getProductService.bind(this),
+            getInvoiceList: this.getInvoiceList.bind(this),
+            getOrderNumber: this.getOrderNumber.bind(this),
+            createOrder: this.createOrder.bind(this),
             // createInvoice: this.createInvoice.bind(this),
             // checkInvoiceNumber: this.checkInvoiceNumber.bind(this),
             // getInvoiceList: this.getInvoiceList.bind(this)
@@ -68,7 +69,7 @@ class adminAuth {
 
     async signup(req, res) {
         try {
-            let { name, organization, password, email, location , state} = req.body
+            let { name, organization, password, email, location, state } = req.body
             let getUser = await UsersAdminModel.findOne({ $and: [{ email: email }, { login_type: 'manual' }, { user_type: 'subadmin' }] }).lean()
             if (getUser) {
                 res.json({ code: 404, success: false, message: 'Email is already register', })
@@ -182,7 +183,7 @@ class adminAuth {
                 if (suffix) {
                     getuser.suffix = suffix
                 }
-                
+
                 if (email) {
                     getuser.email = email
                 }
@@ -220,7 +221,7 @@ class adminAuth {
                 if (shipping_address) {
                     getuser.shipping_address = shipping_address
                 }
-                
+
                 if (notes) {
                     getuser.notes = notes
                 }
@@ -236,7 +237,7 @@ class adminAuth {
                 if (customer_meta) {
                     getuser.customer_meta = customer_meta
                 }
-                 let update = await CustomerModel.findOneAndUpdate({ _id: _id },getuser)
+                let update = await CustomerModel.findOneAndUpdate({ _id: _id }, getuser)
                 res.json({ code: 200, success: true, message: 'update customer successfully', data: update })
             } else {
                 res.json({ code: 404, success: true, message: 'user id is not exist' })
@@ -313,7 +314,7 @@ class adminAuth {
         }
     }
 
-    async getInvoiceNumber(req , res){
+    async getInvoiceNumber(req, res) {
         try {
             let flage = false
             let fourDigitsRandom
@@ -327,19 +328,19 @@ class adminAuth {
                 }
             }
             while (flage);
-            res.json({ code: 200, success: true, message: "get Successfull",data: fourDigitsRandom })
+            res.json({ code: 200, success: true, message: "get Successfull", data: fourDigitsRandom })
             // return  fourDigitsRandom
         } catch (error) {
             res.json({ code: 400, success: false, message: "Internal server error", })
         }
     }
-    async checkInvoiceNumber(req , res){
+    async checkInvoiceNumber(req, res) {
         try {
             // console.log("req.body.invoice_number",req.body.invoice_number)
             let getData = await InvoiceModel.findOne({ invoice_number: req.body.invoice_number })
-            if(getData){
+            if (getData) {
                 res.json({ code: 400, success: true, message: "this number is already exist", })
-            }else{
+            } else {
                 res.json({ code: 200, success: true, message: "this number is availble" })
             }
         } catch (error) {
@@ -348,9 +349,9 @@ class adminAuth {
     }
     async createProductService(req, res) {
         try {
-            const { name, hsn_sac, discription, price, tax,created_by ,tax_type} =  req.body
+            const { name, hsn_sac, discription, price, tax, created_by, tax_type } = req.body
             // add-product-service
-            let getdata = await ProducrServiceModel.findOne({ name: name, created_by:created_by  })
+            let getdata = await ProducrServiceModel.findOne({ name: name, created_by: created_by })
             if (getdata) {
                 res.json({ code: 200, success: true, message: 'name is already exist', data: getdata })
             } else {
@@ -384,10 +385,10 @@ class adminAuth {
 
     async createInvoice(req, res) {
         try {
-            const {created_by,customer_id,invoice_number,invoice_type,invoice_date, due_date,total,subtotal ,balance_due,invoice_message,statement_message,
-                attachments, products_meta,recurring_interval} =  req.body
+            const { created_by, customer_id, invoice_number, invoice_type, invoice_date, due_date, total, subtotal, balance_due, invoice_message, statement_message,
+                attachments, products_meta, recurring_interval } = req.body
             // add-product-service
-            let getdata = await InvoiceModel.findOne({ invoice_number : invoice_number, created_by:created_by  })
+            let getdata = await InvoiceModel.findOne({ invoice_number: invoice_number, created_by: created_by })
             if (getdata) {
                 res.json({ code: 200, success: true, message: 'invoice_number is already exist', data: getdata })
             } else {
@@ -403,12 +404,12 @@ class adminAuth {
                     subtotal: subtotal,
                     balance_due: balance_due,
                     invoice_message: invoice_message,
-                    statement_message:statement_message,
+                    statement_message: statement_message,
                     attachments: attachments,
                     products_meta: products_meta,
                     recurring_interval: recurring_interval,
-                    type1 : recurring_interval.interval_time =="" ? 'invoice' : ""
-                    
+                    type1: recurring_interval.interval_time == "" ? 'invoice' : ""
+
                 })
                 let data = await savedata.save();
                 res.json({ code: 200, success: true, message: 'Create invoice successfully', data: data })
@@ -418,9 +419,6 @@ class adminAuth {
             res.status(500).json({ success: false, message: "Somthing went wrong", })
         }
     }
-
-    
-
     async getInvoiceList(req, res) {
         try {
             let options = {
@@ -429,7 +427,7 @@ class adminAuth {
                 // sort: {  "subcategory_meta.name":1,"name": 1, },
                 lean: true,
             }
-            let query = {type1:"invoice"}
+            let query = { type1: "invoice" }
             console.log(req.body)
             if (req.body.searchData) {
                 query = {
@@ -446,13 +444,61 @@ class adminAuth {
             console.log("request", query)
             let data = await InvoiceModel.paginate(query, options)
             res.json({ code: 200, success: true, message: "Get list successfully ", data: data })
-        }catch (error) {
+        } catch (error) {
             console.log("Error in catch", error)
             res.status(500).json({ success: false, message: "Internal server error", })
         }
     }
 
+    async getOrderNumber(req, res) {
+        try {
+            let flage = false
+            let fourDigitsRandom
+            do {
+                fourDigitsRandom = await Math.floor(10000 + Math.random() * 90000);
+                let getData = await OrderModel.find({ invoice_number: fourDigitsRandom })
+                if (getData.length > 0) {
+                    flage = true
+                } else {
+                    flage = false
+                }
+            }
+            while (flage);
+            res.json({ code: 200, success: true, message: "get Successfull", data: fourDigitsRandom })
+            // return  fourDigitsRandom
+        } catch (error) {
+            res.json({ code: 400, success: false, message: "Internal server error", })
+        }
+    }
+    async createOrder(req, res) {
+        try {
+            const {created_by, order_no, client_po_no, discription, t_order_value, order_startdate, order_enddate, payment_term } = req.body
+            // add-product-service
+            let getdata = await OrderModel.findOne({ order_no: order_no, created_by: created_by })
+            if (getdata) {
+                res.json({ code: 200, success: true, message: 'order_no is already exist', data: getdata })
+            } else {
+                let savedata = new OrderModel({
+                    created_by: created_by,
+                    // customer_id: customer_id,
+                    order_no: order_no,
+                    client_po_no: client_po_no,
+                    discription: discription,
+                    t_order_value: t_order_value,
+                    order_startdate: order_startdate,
+                    order_enddate: order_enddate,
+                    payment_term: payment_term,
+                    status: 'active'
 
+                })
+                let data = await savedata.save();
+                res.json({ code: 200, success: true, message: 'Create order successfully', data: data })
+            }
+        } catch (error) {
+            console.log("Error in catch", error)
+            res.status(500).json({ success: false, message: "Somthing went wrong", })
+        }
+    }
 
 
 
@@ -595,7 +641,7 @@ class adminAuth {
         try {
             let { _id, name, email, country_code, username, number, profile_pic, login_type, country, reddit_username, minner_Activity, is_number_verify, is_complete_kyc, block_user } = req.body
             // console.log("getUser",_id, block_user)
-            // let array = [{ _id: _id }, { login_type: login_type }]
+            // let array = [{ _id: _id }, { login_type: login_t ype }]
             let query = { _id: _id }
             // if (email) {
             //     array.push({
