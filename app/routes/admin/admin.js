@@ -10,6 +10,8 @@ const wallet = require('../../controllers/admin/wallet')
 const validationData= require('../../middlewares/FrontendValidator');
 const Auth = require("../../middlewares/loginToken")
 
+let awsUpload=uploadFile.awsFileUpload()
+
 
 // upload.single('profile_image')
 router.post('/add-customer', admin_controller.createCustomer)
@@ -28,6 +30,27 @@ router.post('/get-invoice-list',admin_controller.getInvoiceList )
 
 router.get('/get-order-no',admin_controller.getOrderNumber )
 router.post('/create-order',admin_controller.createOrder )
+
+
+router.get('/aws/get/bucket', admin_controller.getS3Bucket)
+router.post('/aws/create/folder', admin_controller.createFolderOnBucket)
+router.post('/aws/delete/object', admin_controller.deletes3Object)
+
+
+
+router.post('/aws/upload/image', awsUpload.single('file'), admin_controller.uploadImageAWS)
+
+
+router.post('/add-folder-file', admin_controller.createFolderAndFile)
+router.get('/get-folder', admin_controller.getFolderslist)
+router.get('/get-file', admin_controller.getfilelist)
+
+router.get('/get-folder-byid', admin_controller.getDataFolderById)
+router.get('/get-file-byid', admin_controller.getDatafileById)
+
+
+
+
 
 
 

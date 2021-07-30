@@ -12,6 +12,15 @@ const CustomerModel = require('../../models/admin/customers')
 const ProducrServiceModel = require('../../models/admin/product_service')
 const InvoiceModel = require('../../models/admin/invoice');
 const OrderModel = require('../../models/admin/orders');
+const FoldersModel = require('../../models/admin/folders')
+var AWS = require('aws-sdk');
+const S3 = new AWS.S3({
+    bucketName: 'atpl-education',
+    // dirName: 'hawilti-images', /* optional */
+    // region: 'eu-west-1',
+    accessKeyId: 'AKIAQPL76CRLC5RWFAIB',
+    secretAccessKey: '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'
+})
 class adminAuth {
     constructor() {
         return {
@@ -31,12 +40,17 @@ class adminAuth {
             getInvoiceList: this.getInvoiceList.bind(this),
             getOrderNumber: this.getOrderNumber.bind(this),
             createOrder: this.createOrder.bind(this),
-            // createInvoice: this.createInvoice.bind(this),
-            // checkInvoiceNumber: this.checkInvoiceNumber.bind(this),
-            // getInvoiceList: this.getInvoiceList.bind(this)
-            // updateUser: this.updateUser.bind(this)
-
-
+            ////////////////////////////////////aws/////////////////////////
+            uploadImageAWS: this.uploadImageAWS.bind(this),
+            getS3Bucket: this.getS3Bucket.bind(this),
+            createFolderOnBucket: this.createFolderOnBucket.bind(this),
+            deletes3Object: this.deletes3Object.bind(this),
+            ///////////////////////////////////end//////////////////////////////
+            createFolderAndFile: this.createFolderAndFile.bind(this),
+            getFolderslist: this.getFolderslist.bind(this),
+            getDataFolderById: this.getDataFolderById.bind(this),
+            getDatafileById: this.getDatafileById.bind(this),
+            getfilelist: this.getfilelist.bind(this)
         }
     }
 
@@ -472,7 +486,7 @@ class adminAuth {
     }
     async createOrder(req, res) {
         try {
-            const {created_by, order_no, client_po_no, discription, t_order_value, order_startdate, order_enddate, payment_term } = req.body
+            const { created_by, order_no, client_po_no, discription, t_order_value, order_startdate, order_enddate, payment_term } = req.body
             // add-product-service
             let getdata = await OrderModel.findOne({ order_no: order_no, created_by: created_by })
             if (getdata) {
@@ -500,8 +514,203 @@ class adminAuth {
         }
     }
 
+    async createFolderAndFile(req, res) {
+        try {
+            const { created_by, customer_id, name, file_path, parent_folder_id, child_folder_id, is_file } = req.body
+            // add-product-service
+            console.log("type of is file", customer_id, name, is_file, typeof is_file)
+            // let getdata = await FoldersModel.findOne({ name: name, customer: customer_id, is_file :is_file })
+            // console.log("getdata",getdata)
+            // if (getdata) {
+            //     res.json({ code: 200, success: true, message: 'this is already exist', data: getdata })
+            // } else {
 
+            let newData = {}
 
+            if (is_file) {
+                newData.is_file = is_file
+                newData.file_path = file_path
+            }
+            if (is_file == false) {
+                newData.is_file = is_file
+            }
+            if (name) {
+                newData.name = name
+            }
+            if (parent_folder_id) {
+                newData.parent = parent_folder_id
+            }
+            if (child_folder_id) {
+                newData.children = child_folder_id
+            }
+            if (customer_id) {
+                newData.customer = customer_id
+            }
+            if (created_by) {
+                newData.created_by = created_by
+            }
+            newData.status = 'active'
+            console.log("newDatanewData", newData)
+            let getdata = await FoldersModel.findOne(newData).lean()
+            // console.log("getdata",getdata)
+            if (getdata) {
+                res.json({ code: 200, success: true, message: 'this is already exist', data: getdata })
+            } else {
+                let savedata = new FoldersModel(newData)
+                let data = await savedata.save();
+                res.json({ code: 200, success: true, message: 'Create order successfully', data: data })
+            }
+
+            // }
+        } catch (error) {
+            console.log("Error in catch", error)
+            res.status(500).json({ success: false, message: "Somthing went wrong", })
+        }
+    }
+    async getFolderslist(req, res) {
+        try {
+            const { customer_id } = req.query
+            console.log("type of is file", customer_id)
+            let getData = await FoldersModel.find({ customer: customer_id , is_file:false }).lean()
+            if (getData.length == 0) {
+                res.json({ code: 404, success: false, message: 'Data not found', data: getData })
+            } else {
+                res.json({ code: 200, success: true, message: 'get list', data: getData })
+            }
+            // }
+        } catch (error) {
+            console.log("Error in catch", error)
+            res.status(500).json({ success: false, message: "Somthing went wrong", })
+        }
+    }
+    async getfilelist(req, res) {
+        try {
+            const { customer_id } = req.query
+            console.log("type of is file", customer_id)
+            let getData = await FoldersModel.find({ customer: customer_id, is_file:true}).lean()
+            if (getData.length == 0) {
+                res.json({ code: 404, success: false, message: 'Data not found', data: getData })
+            } else {
+                res.json({ code: 200, success: true, message: 'get list', data: getData })
+            }
+            // }
+        } catch (error) {
+            console.log("Error in catch", error)
+            res.status(500).json({ success: false, message: "Somthing went wrong", })
+        }
+    }
+    async getDataFolderById(req, res) {
+        try {
+            const { customer_id, folder_id } = req.query
+            console.log("type of is file", customer_id)
+            let getData = await FoldersModel.find({  customer: customer_id,parent: folder_id , is_file: false}).lean()
+            if (getData.length == 0) {
+                res.json({ code: 404, success: false, message: 'Data not found', data: getData })
+            } else {
+                res.json({ code: 200, success: true, message: 'get list', data: getData })
+            }
+            // }
+        } catch (error) {
+            console.log("Error in catch", error)
+            res.status(500).json({ success: false, message: "Somthing went wrong", })
+        }
+    }
+    async getDatafileById(req, res) {
+        try {
+            const { customer_id, folder_id } = req.query
+            console.log("type of is file", customer_id)
+            let getData = await FoldersModel.find({  customer: customer_id,parent: folder_id , is_file: true}).lean()
+            if (getData.length == 0) {
+                res.json({ code: 404, success: false, message: 'Data not found', data: getData })
+            } else {
+                res.json({ code: 200, success: true, message: 'get list', data: getData })
+            }
+            // }
+        } catch (error) {
+            console.log("Error in catch", error)
+            res.status(500).json({ success: false, message: "Somthing went wrong", })
+        }
+    }
+    /////////////////////////////////////////////////////////////////////////////start///aws s3 apis/////////////////////////////
+    async uploadImageAWS(req, res) {
+        try {
+
+            if (req.file) {
+                res.json({ code: 200, success: true, message: "data listed sucessfully", result: req.file.location })
+            } else {
+                res.json({ code: 500, success: false, message: "data not listed ", result: '' });
+            }
+        } catch (error) {
+            res.json({ code: 500, success: false, message: "Data somethig went wrong", e })
+        }
+
+    }
+    async getS3Bucket(req, res) {
+        try {
+            S3.listBuckets(function (err, data) {
+                if (err) {
+                    console.log("Error", err);
+                } else {
+                    res.json({ code: 200, success: true, message: "data listed sucessfully", result: data.Buckets })
+                }
+            });
+        } catch (error) {
+            console.log("Successget buckets", error);
+            res.json({ code: 500, success: false, message: "Data somethig went wrong111", error })
+        }
+
+    }
+    async createFolderOnBucket(req, res) {
+        try {
+            var params = { Bucket: 'atpl-education', Key: 'user1/', ACL: 'public-read', Body: 'body does not matter' };
+
+            S3.upload(params, function (err, data) {
+                if (err) {
+                    console.log("Error creating the folder: ", err);
+                } else {
+                    res.json({ code: 200, success: true, message: "Successfully created a folder on S3", data })
+                }
+            });
+
+        } catch (error) {
+            console.log("Successget buckets", error);
+            res.json({ code: 500, success: false, message: "Data somethig went wrong111", error })
+        }
+
+    }
+    async getS3Folders(req, res) {
+        try {
+            var params = {
+                Bucket: 'atpl-education', /* required */
+                // Prefix: 'logo.png-1627463517104.png'  // Can be your folder name
+            };
+            S3.listObjectsV2(params, function (err, data) {
+                if (err) console.log(err, err.stack); // an error occurred
+                else {
+                    // console.log("successful response",data); 
+                    res.json({ code: 200, success: true, message: "data listed sucessfully", result: data })
+                }              // successful response
+            });
+
+        } catch (error) {
+            res.json({ code: 500, success: false, message: "Data somethig went wrong", error })
+        }
+    }
+    async deletes3Object(req, res) {
+        try {
+            S3.deleteObject({
+                Bucket: 'atpl-education',
+                Key: 'logo.png-1627466629900.png'
+            }, function (err, data) {
+                res.json({ code: 200, success: true, message: "data listed sucessfully", result: data })
+
+            })
+
+        } catch (error) {
+            res.json({ code: 500, success: false, message: "Data somethig went wrong", error })
+        }
+    }
+    /////////////////////////////////////////////////////aws s3 apis end/////////////////////////////
     ////////////////////////////////////////////////////////////end ba apis admin..///////////////
     async getUser(req, res) {
         try {
