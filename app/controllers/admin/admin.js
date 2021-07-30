@@ -535,6 +535,7 @@ class adminAuth {
                 newData.is_file = is_file
             }
             if (name) {
+                
                 newData.name = name
             }
             if (parent_folder_id) {
