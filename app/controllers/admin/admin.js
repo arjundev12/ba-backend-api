@@ -14,9 +14,6 @@ const InvoiceModel = require('../../models/admin/invoice');
 const OrderModel = require('../../models/admin/orders');
 const FoldersModel = require('../../models/admin/folders')
 var AWS = require('aws-sdk');
-console.log("bucket",`${process.env.BUCKET_NAME}` )
-console.log("access",`${process.env.ACCESS_KEY_ID}` )
-console.log("secret",`${process.env.SRCRET_ACCESS_KEY}` )
 const S3 = new AWS.S3({
     bucketName: `${process.env.BUCKET_NAME}`,
     // dirName: 'hawilti-images', /* optional */
