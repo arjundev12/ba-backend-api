@@ -14,12 +14,15 @@ const InvoiceModel = require('../../models/admin/invoice');
 const OrderModel = require('../../models/admin/orders');
 const FoldersModel = require('../../models/admin/folders')
 var AWS = require('aws-sdk');
+console.log("bucket",`${process.env.BUCKET_NAME}` )
+console.log("access",`${process.env.ACCESS_KEY_ID}` )
+console.log("secret",`${process.env.SRCRET_ACCESS_KEY}` )
 const S3 = new AWS.S3({
-    bucketName: 'atpl-education',
+    bucketName: `${process.env.BUCKET_NAME}`,
     // dirName: 'hawilti-images', /* optional */
     // region: 'eu-west-1',
-    accessKeyId: 'AKIAQPL76CRLC5RWFAIB',
-    secretAccessKey: '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'
+    accessKeyId:  `${process.env.ACCESS_KEY_ID}`,
+    secretAccessKey: `${process.env.SRCRET_ACCESS_KEY}`,
 })
 class adminAuth {
     constructor() {
@@ -663,7 +666,7 @@ class adminAuth {
     }
     async createFolderOnBucket(req, res) {
         try {
-            var params = { Bucket: 'atpl-education', Key: 'user1/', ACL: 'public-read', Body: 'body does not matter' };
+            var params = { Bucket: `${process.env.BUCKET_NAME}`, Key: 'user1/', ACL: 'public-read', Body: 'body does not matter' };
 
             S3.upload(params, function (err, data) {
                 if (err) {
@@ -682,7 +685,7 @@ class adminAuth {
     async getS3Folders(req, res) {
         try {
             var params = {
-                Bucket: 'atpl-education', /* required */
+                Bucket: `${process.env.BUCKET_NAME}`, /* required */
                 // Prefix: 'logo.png-1627463517104.png'  // Can be your folder name
             };
             S3.listObjectsV2(params, function (err, data) {
@@ -700,7 +703,7 @@ class adminAuth {
     async deletes3Object(req, res) {
         try {
             S3.deleteObject({
-                Bucket: 'atpl-education',
+                Bucket: `${process.env.BUCKET_NAME}`,
                 Key: 'logo.png-1627466629900.png'
             }, function (err, data) {
                 res.json({ code: 200, success: true, message: "data listed sucessfully", result: data })

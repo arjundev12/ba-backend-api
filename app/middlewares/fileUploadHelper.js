@@ -6,12 +6,12 @@ const { common } = require('./../utilities/constants')
 
 const AWS = require('aws-sdk');
 const multerS3 = require('multer-s3');
-const S3= new AWS.S3({
-    bucketName: 'atpl-education',
+const S3=new AWS.S3({
+    bucketName: `${process.env.BUCKET_NAME}`,
     // dirName: 'hawilti-images', /* optional */
     // region: 'eu-west-1',
-    accessKeyId:'AKIAQPL76CRLC5RWFAIB',
-    secretAccessKey:'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'    
+    accessKeyId:  `${process.env.ACCESS_KEY_ID}`,
+    secretAccessKey: `${process.env.SRCRET_ACCESS_KEY}`,
 })
 
 
@@ -74,7 +74,7 @@ class uploadImage{
             const awsStorage = multerS3({
                 s3: S3,
                 acl: 'public-read',
-                bucket: 'atpl-education/customer-document',
+                bucket: `${process.env.BUCKET_NAME}/customer-document`,
                 key: function(req, file, cb) {
                 //   console.log("FIFIFIFIFFIFIFIFFIFIFIIFDATAA",req.file, "body...........",req.body, file);
                   console.log(file, );
