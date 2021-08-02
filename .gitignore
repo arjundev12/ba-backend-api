@@ -41,10 +41,10 @@ build/Release
 node_modules/
 jspm_packages/
 # dotenv environment variables file
-# .env
-# .env.test
-# .env/
-# .env.test/
+.env
+.env.test
+.env/
+.env.test/
 # TypeScript v1 declaration files
 typings/
 
