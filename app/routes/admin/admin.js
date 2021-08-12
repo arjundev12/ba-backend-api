@@ -30,6 +30,7 @@ router.post('/get-invoice-list',admin_controller.getInvoiceList )
 
 router.get('/get-order-no',admin_controller.getOrderNumber )
 router.post('/create-order',admin_controller.createOrder )
+router.get('/get-order-list',admin_controller.getOrderbyCustomerId )
 
 
 router.get('/aws/get/bucket', admin_controller.getS3Bucket)
