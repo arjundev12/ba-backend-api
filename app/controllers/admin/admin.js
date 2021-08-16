@@ -14,6 +14,7 @@ const InvoiceModel = require('../../models/admin/invoice');
 const OrderModel = require('../../models/admin/orders');
 const FoldersModel = require('../../models/admin/folders')
 var AWS = require('aws-sdk');
+const PaymentMethodModel = require('../../models/admin/payment_methods');
 const S3 = new AWS.S3({
     bucketName: `${process.env.BUCKET_NAME}`,
     // dirName: 'hawilti-images', /* optional */
@@ -51,7 +52,10 @@ class adminAuth {
             getFolderslist: this.getFolderslist.bind(this),
             getDataFolderById: this.getDataFolderById.bind(this),
             getDatafileById: this.getDatafileById.bind(this),
-            getfilelist: this.getfilelist.bind(this)
+            getfilelist: this.getfilelist.bind(this),
+            getPaymentMethodCreatedBy: this.getPaymentMethodCreatedBy.bind(this),
+            createPaymentMethod: this.createPaymentMethod.bind(this),
+            // getfilelist: this.getfilelist.bind(this)
         }
     }
 
@@ -448,13 +452,24 @@ class adminAuth {
             let query = { type1: "invoice" }
             console.log(req.body)
             if (req.body.searchData) {
-                query = {
-                    $or: [{ email: { $regex: req.body.searchData, $options: "i" } },
-                    { name: { $regex: req.body.searchData, $options: "i" } },
-                    { first_name: { $regex: req.body.searchData, $options: "i" } },
-                    { display_name: { $regex: req.body.searchData, $options: "i" } },
-                    { middle_name: { $regex: req.body.searchData, $options: "i" } }]
-                }
+                query.invoice_number=req.body.searchData
+                //  = {
+                //     invoice_number: searchData
+                    // $or: [{ email: { $regex: req.body.searchData, $options: "i" } },
+                    // { name: { $regex: req.body.searchData, $options: "i" } },
+                    // { first_name: { $regex: req.body.searchData, $options: "i" } },
+                    // { display_name: { $regex: req.body.searchData, $options: "i" } },
+                    // { middle_name: { $regex: req.body.searchData, $options: "i" } }]
+                // }
+            }
+            let invoice_date={}
+            if (req.body.startfrom){
+                invoice_date['$gte'] =req.body.startfrom
+                query.invoice_date =invoice_date
+            }
+            if (req.body.due_date){
+                invoice_date['$lt'] =req.body.due_date
+                query.invoice_date= invoice_date
             }
             if (req.body._id) {
                 query.customer_id = req.body._id
@@ -467,6 +482,7 @@ class adminAuth {
             res.status(500).json({ success: false, message: "Internal server error", })
         }
     }
+    
 
     async getOrderNumber(req, res) {
         try {
@@ -654,6 +670,44 @@ class adminAuth {
             res.status(500).json({ success: false, message: "Somthing went wrong", })
         }
     }
+    async createPaymentMethod(req, res) {
+        try {
+            const { created_by, name } = req.body
+            console.log("type of is file", created_by)
+            let getData = await PaymentMethodModel.findOne({  created_by: created_by, name:name }).lean()
+            if (getData) {
+                res.json({ code: 404, success: false, message: 'All ready exist', data: getData })
+            } else {
+                
+                let savedata = new PaymentMethodModel({
+                    created_by: created_by, name:name ,status : "active"
+                })
+                let data = await savedata.save();
+                res.json({ code: 200, success: true, message: 'Save successfully', data: data })
+            }
+            // }
+        } catch (error) {
+            console.log("Error in catch", error)
+            res.status(500).json({ success: false, message: "Somthing went wrong", })
+        }
+    }
+    async getPaymentMethodCreatedBy(req, res) {
+        try {
+            const { _id } = req.query
+            console.log("type of is _id", _id)
+            let getData = await PaymentMethodModel.find({ created_by: _id, status:'active' }).lean()
+            if (getData.length == 0) {
+                res.json({ code: 404, success: false, message: 'data not found', data: getData })
+            } else {
+                res.json({ code: 200, success: true, message: 'get list', data: getData })
+            }
+            // }
+        } catch (error) {
+            console.log("Error in catch", error)
+            res.status(500).json({ success: false, message: "Somthing went wrong", })
+        }
+    }
+    
     /////////////////////////////////////////////////////////////////////////////start///aws s3 apis/////////////////////////////
     async uploadImageAWS(req, res) {
         try {

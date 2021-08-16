@@ -49,9 +49,8 @@ router.get('/get-file', admin_controller.getfilelist)
 router.get('/get-folder-byid', admin_controller.getDataFolderById)
 router.get('/get-file-byid', admin_controller.getDatafileById)
 
-
-
-
+router.post('/payment-method-create', admin_controller.createPaymentMethod)
+router.get('/get-payment-method', admin_controller.getPaymentMethodCreatedBy)
 
 
 
